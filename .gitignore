@@ -1,0 +1,56 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.so
+*.pyd
+*.pyo
+
+# Virtual environments
+.env/
+.venv/
+env/
+venv/
+voicebot/
+ai_env/
+*.conda
+*.env
+*.bak
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# PyInstaller
+dist/
+build/
+*.spec
+
+# Model files (optional, if using Hugging Face cache instead)
+models/
+*.ckpt
+*.safetensors
+*.pt
+*.bin
+
+# Audio and log files
+*.wav
+*.mp3
+*.flac
+*.ogg
+chatlog.txt
+
+# Hugging Face cache (optional, recommended to ignore for cleanliness)
+~/.cache/huggingface/
+~/.huggingface/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# VSCode
+.vscode/
+
+# PyCharm
+.idea/
+
+# Logs
+*.log

@@ -157,9 +157,12 @@ python chatbot_speech_to_speech.py
 
 ---
 
-## 🔒 Fully Offline
+## 🔒 Fully Offline After First Setup
 
-All models are downloaded and executed locally. No data is sent to any server.
+All models used in this project are **downloaded automatically on first run** and cached locally on your machine.  
+After the initial download and setup, the chatbot runs **completely offline** without requiring any internet connection or API keys.  
+
+> ⚠️ **Note:** The model files can be large (up to a few GB), so initial setup may take some time and bandwidth.
 
 ---
 

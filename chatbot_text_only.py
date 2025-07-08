@@ -56,8 +56,14 @@ class SimpleChatBot:
             do_sample=self.llm_config.get("do_sample", True)
         )
         response = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
+
         if response.startswith(prompt):
             response = response[len(prompt):].strip()
+
+        # Clean unwanted tags
+        response = response.replace(
+            "</think>", "").replace("<think>", "").strip()
+
         return response
 
     def animate_typing(self, stop_event):

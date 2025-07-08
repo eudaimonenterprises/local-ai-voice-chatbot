@@ -66,8 +66,7 @@ class ChatBotSpeech:
         self.audio_queue = queue.Queue()
 
     def generate_prompt(self, user_input):
-        behavior = self.llm_config.get("prompt_behavior", "")
-        return f"{behavior}\nUser: {user_input}\nAssistant:"
+        return f"User: {user_input}\nAssistant:"
 
     def generate_response(self, user_input):
         prompt = self.generate_prompt(user_input)

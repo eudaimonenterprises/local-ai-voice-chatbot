@@ -40,20 +40,23 @@ class SimpleChatBot:
         print(f"Model loaded on device: {device}")
 
     def generate_prompt(self, user_input):
-        prompt = self.llm_config.get(
-            "prompt_behavior", "") + f"\nUser: {user_input}\nAssistant:"
+        prompt = f"User: {user_input}\nAssistant:"
         return prompt
 
     def generate_response(self, user_input):
         prompt = self.generate_prompt(user_input)
         inputs = self.tokenizer(
             prompt, return_tensors="pt").to(self.model.device)
+
+        eos_token_id = self.tokenizer.eos_token_id
+
         outputs = self.model.generate(
             **inputs,
             max_new_tokens=self.llm_config.get("max_new_tokens", 150),
             temperature=self.llm_config.get("temperature", 0.7),
             top_p=self.llm_config.get("top_p", 0.9),
-            do_sample=self.llm_config.get("do_sample", True)
+            do_sample=self.llm_config.get("do_sample", True),
+            eos_token_id=eos_token_id
         )
         response = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
 
@@ -63,6 +66,7 @@ class SimpleChatBot:
         # Clean unwanted tags
         response = response.replace(
             "</think>", "").replace("<think>", "").strip()
+        response = response.split("User:")[0].strip()
 
         return response
 

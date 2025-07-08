@@ -31,11 +31,11 @@ class ChatBot:
 
         # Load LLM
         print("Loading LLM model:", self.llm_config["model_id"])
-        self.tokenizer = AutoTokenizer.from_pretrained(
-            self.llm_config["model_id"], trust_remote_code=True)
-
         print("LLM settings:", {
               k: v for k, v in self.llm_config.items() if k != "model_id"})
+
+        self.tokenizer = AutoTokenizer.from_pretrained(
+            self.llm_config["model_id"], trust_remote_code=True)
         self.model = AutoModelForCausalLM.from_pretrained(
             self.llm_config["model_id"],
             torch_dtype=torch.float16,
@@ -47,22 +47,16 @@ class ChatBot:
         print(f"Model loaded on device: {device}")
 
         # Load TTS
-
         print("Loading TTS model:", self.tts_config["model_id"])
         self.tts = TTS(model_name=self.tts_config["model_id"])
-
-        print("TTS speaker:", self.speaker)
         self.speaker = self.tts_config.get("speaker")
+        print("TTS speaker:", self.speaker)
 
-        self.history_lines = []
-        self.max_history = 3
         self.audio_playback = None
 
     def generate_prompt(self, user_input):
-        recent_history = self.history_lines[-self.max_history * 2:]
-        history_text = "\n".join(recent_history)
         prompt = self.llm_config.get(
-            "prompt_behavior", "") + "\n" + history_text + f"\nUser: {user_input}\nAssistant:"
+            "prompt_behavior", "") + f"\nUser: {user_input}\nAssistant:"
         return prompt
 
     def generate_response(self, user_input):
@@ -87,11 +81,6 @@ class ChatBot:
         wav_bytes = self.tts.tts_to_bytes(text, speaker=self.speaker)
         audio = AudioSegment.from_file(BytesIO(wav_bytes), format="wav")
         self.audio_playback = _play_with_simpleaudio(audio)
-
-    def log_interaction(self, user_input, bot_response):
-        with open("chatlog.txt", "a", encoding="utf-8") as log:
-            log.write(f"User: {user_input}\n")
-            log.write(f"Bot: {bot_response}\n\n")
 
     def animate_typing(self, stop_event):
         animation = ["|", "/", "-", "\\"]
@@ -133,10 +122,6 @@ class ChatBot:
             print("Bot:", bot_response)
 
             self.speak(bot_response)
-
-            self.history_lines.append(f"User: {user_input}")
-            self.history_lines.append(f"Assistant: {bot_response}")
-            self.log_interaction(user_input, bot_response)
 
 
 if __name__ == "__main__":

@@ -39,14 +39,9 @@ class SimpleChatBot:
         device = "cuda" if torch.cuda.is_available() else "cpu"
         print(f"Model loaded on device: {device}")
 
-        self.history_lines = []
-        self.max_history = 3
-
     def generate_prompt(self, user_input):
-        recent_history = self.history_lines[-self.max_history * 2:]
-        history_text = "\n".join(recent_history)
         prompt = self.llm_config.get(
-            "prompt_behavior", "") + "\n" + history_text + f"\nUser: {user_input}\nAssistant:"
+            "prompt_behavior", "") + f"\nUser: {user_input}\nAssistant:"
         return prompt
 
     def generate_response(self, user_input):
@@ -79,7 +74,6 @@ class SimpleChatBot:
 
     def chat(self):
         print("Simple ChatBot is ready. Type 'exit' to quit.")
-
         while True:
             user_input = input("You: ")
             if user_input.lower() == "exit":
@@ -104,13 +98,6 @@ class SimpleChatBot:
             animation_thread.join()
 
             print("Bot:", bot_response)
-
-            self.history_lines.append(f"User: {user_input}")
-            self.history_lines.append(f"Assistant: {bot_response}")
-
-            with open("chatlog.txt", "a", encoding="utf-8") as log:
-                log.write(f"User: {user_input}\n")
-                log.write(f"Bot: {bot_response}\n\n")
 
 
 if __name__ == "__main__":

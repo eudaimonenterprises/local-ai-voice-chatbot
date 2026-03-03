@@ -18,7 +18,7 @@ Over the past months, I've explored many open-source and commercial **Local AI C
 
 After testing many models and options, I selected the following:
 
-- **LLM**: [`DeepSeek-R1-Distill-Qwen-1.5B`](https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B) — a highly optimized instruction-tuned model, fast and accurate even on consumer GPUs.
+- **LLM**: [`lukey03/Qwen3.5-9B-abliterated-GGUF`](https://huggingface.co/lukey03/Qwen3.5-9B-abliterated-GGUF) — a highly optimized instruction-tuned model, fast and accurate even on consumer GPUs.
 - **TTS**: [`Kokoro-82M`](https://huggingface.co/hexgrad/Kokoro-82M) — a lightweight yet expressive voice model with speaker selection (British, American, male/female).
 - **STT**: [`Whisper-tiny`](https://huggingface.co/openai/whisper-tiny) — small and surprisingly accurate for transcribing English speech.
 

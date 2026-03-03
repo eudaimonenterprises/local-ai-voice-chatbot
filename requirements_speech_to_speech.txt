@@ -7,3 +7,6 @@ simpleaudio
 sounddevice
 webrtcvad
 whisper
+openai-whisper
+requests>=2.25.0  # For LM Studio API support
+scipy

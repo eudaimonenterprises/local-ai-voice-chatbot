@@ -83,7 +83,14 @@ pip install -r requirements_text_only.txt
 pip install -r requirements_text_to_speech.txt
 pip install -r requirements_speech_to_speech.txt
 ```
-
+Ubuntu / Debian / Mint:
+```bash
+sudo apt-get update
+sudo apt-get install libasound2-dev
+sudo apt install libportaudio2
+sudo apt-get install espeak-ng
+sudo apt install pulseaudio pavucontrol
+```
 ---
 
 ## 📁 Project Structure

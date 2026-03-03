@@ -34,6 +34,8 @@ After testing many models and options, I selected the following:
 - ✅ **Chat history**: short-term memory with logging to `chatlog.txt`
 - ✅ **Modular config**: all models and settings live in `config.json` for easy tweaks
 - ✅ **100% offline**: you can even disconnect Wi-Fi and everything will work 🚫🌐
+- ✅ **Added LM Studio API Support**: in speech-to-speech mode
+- ✅ **Short-term Memory**: Short-term memory enables entire conversations.
 
 This project is ideal for:
 - 🧑‍💻 Developers who want to build or prototype voice assistants

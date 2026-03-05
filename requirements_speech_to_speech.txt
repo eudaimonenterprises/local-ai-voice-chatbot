@@ -1,25 +1,23 @@
+# --- Replace openai-whisper with Faster-Whisper ---
+faster-whisper
+ctranslate2
+
+# --- Core Dependencies ---
 torch
 transformers
 accelerate
-TTS
-pydub
-simpleaudio
 sounddevice
 webrtcvad
-openai-whisper
-requests>=2.25.0  # For LM Studio API support
+requests>=2.25.0
 scipy
 numpy
 
 # --- New Multilingual Support ---
-pysbd       # For smart, multilingual sentence splitting
-py3langid   # For ultra-fast sentence-level language detection
+pysbd
+py3langid
 
-# --- TTS (Commercial-Safe Replacement) ---
-#parler-tts @ git+https://github.com/huggingface/parler-tts.git  # Required for ParlerTTSForConditionalGeneration
-protobuf                                           # Required for the T5 description tokenizer
-sentencepiece                                      # Required for multilingual tokenization
-
+# --- TTS & Support ---
+protobuf
+sentencepiece
 setuptools<82.0.0
-
 piper-tts

@@ -6,7 +6,20 @@ pydub
 simpleaudio
 sounddevice
 webrtcvad
-whisper
 openai-whisper
 requests>=2.25.0  # For LM Studio API support
 scipy
+numpy
+
+# --- New Multilingual Support ---
+pysbd       # For smart, multilingual sentence splitting
+py3langid   # For ultra-fast sentence-level language detection
+
+# --- TTS (Commercial-Safe Replacement) ---
+#parler-tts @ git+https://github.com/huggingface/parler-tts.git  # Required for ParlerTTSForConditionalGeneration
+protobuf                                           # Required for the T5 description tokenizer
+sentencepiece                                      # Required for multilingual tokenization
+
+setuptools<82.0.0
+
+piper-tts

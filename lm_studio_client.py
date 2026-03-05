@@ -47,9 +47,13 @@ class LMStudioClient:
             )
             response.raise_for_status()
             result = response.json()
+            message = result["choices"][0]["message"]
+            
+            content = message.get("content", "").strip()
+            reasoning = message.get("reasoning_content", "").strip()
 
-            # Extract content from OpenAI-compatible response format
-            return result["choices"][0]["message"]["content"].strip()
+            # Return content if it exists; otherwise, fallback to reasoning_content
+            return content if content else reasoning
 
         except requests.exceptions.RequestException as e:
             raise ConnectionError(f"LM Studio API connection failed: {e}")

@@ -8,13 +8,7 @@
 
 import os
 import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer
-from pydub import AudioSegment
-from pydub.playback import _play_with_simpleaudio
-from io import BytesIO
-import sounddevice as sd
 import webrtcvad
-import whisper
 import queue
 import threading
 import sys
@@ -22,15 +16,16 @@ import time
 import json
 import pysbd
 import py3langid
-import subprocess
 import requests
-import array
-
+#import subprocess #for espeak-ng
 
 import numpy as np
+import sounddevice as sd
+
+from transformers import AutoModelForCausalLM, AutoTokenizer
 from scipy.signal import resample
 from piper import PiperVoice      # The main engine
-#from parler_tts import ParlerTTSForConditionalGeneration
+from faster_whisper import WhisperModel
 
 # LM Studio client import (optional)
 try:
@@ -108,7 +103,14 @@ class ChatBotSpeech:
 
         # --- STT Loading (Whisper MIT) ---
         stt_cfg = self.config["stt"]
-        self.whisper_model = whisper.load_model(stt_cfg["model_id"])
+        self.whisper_model = WhisperModel(
+            stt_cfg.get("model_id", "small"),
+            device=stt_cfg.get("device", "cpu"),
+            compute_type=stt_cfg.get("compute_type", "int8")
+        )
+
+        self.energy_threshold = stt_cfg.get("energy_threshold", 300)
+        self.pause_threshold = stt_cfg.get("pause_threshold", 2.0)
 
         # 1. Initialize the storage for loaded voices (This fixes the error)
         self.loaded_voices = {} 
@@ -436,14 +438,25 @@ class ChatBotSpeech:
         sys.stdout.write(" " * 30 + "\r")
         sys.stdout.flush()
 
-    def is_speech(self, data):
-        return self.vad.is_speech(data, self.sample_rate)
+    def is_speech(self, frame):
+        # Convert to float64 to prevent overflow during squaring
+        audio_data = np.frombuffer(frame, dtype=np.int16).astype(np.float64)
+        # Calculate RMS energy safely
+        energy = np.sqrt(np.mean(np.square(audio_data)) + 1e-9)
+        
+        if energy < self.energy_threshold:
+            return False
+            
+        return self.vad.is_speech(frame, self.sample_rate)
 
     def record_audio(self):
-        print("🎤 Listening... Speak now.")
+        print(f"🎤 Listening... (Threshold: {self.energy_threshold}, Pause: {self.pause_threshold}s)")
         buffer = bytes()
         silence_duration = 0
         speaking = False
+        
+        # Convert 2.0s pause to milliseconds for the loop
+        max_silence_ms = self.pause_threshold * 1000
 
         def callback(indata, frames, time_info, status):
             if status:
@@ -458,7 +471,9 @@ class ChatBotSpeech:
             callback=callback,
         ):
             while True:
+                # Clear the queue to prevent "laggy" audio processing
                 frame = self.audio_queue.get()
+                
                 if self.is_speech(frame):
                     buffer += frame
                     silence_duration = 0
@@ -466,37 +481,61 @@ class ChatBotSpeech:
                 else:
                     if speaking:
                         silence_duration += self.frame_duration
-                        if silence_duration > 800:
+                        # USE THE JSON PAUSE THRESHOLD HERE
+                        if silence_duration > max_silence_ms:
                             break
+            
+            print("🛑 End of speech detected.")
             return buffer
 
     def transcribe(self, audio_bytes, force_lang=None):
         # 1. Prepare audio (Standard 16-bit PCM to float32)
+        # Ensure audio_bytes is not empty to avoid NoneType return
+        if not audio_bytes:
+            return "", "unknown"
+
         audio_np = np.frombuffer(audio_bytes, dtype="int16").astype("float32") / 32768.0
         
         # 2. DECISION: Autodetect or Force?
         if force_lang:
-            # Skip LID pass, go straight to the forced language dictionary
-            # This is the "One-Shot" fix for heavy accents
-            result = self.whisper_model.transcribe(audio_np, language=force_lang)
+            # Skip LID pass, go straight to the forced language
+            segments, _ = self.whisper_model.transcribe(audio_np, language=force_lang)
             detected_lang = force_lang
         else:
             # AGNOSTIC MODE: Let the model guess
-            # Flipped Logic: Check probabilities first for better debug data
-            mel = whisper.log_mel_spectrogram(whisper.pad_or_trim(audio_np)).to(self.whisper_model.device)
-            _, probs = self.whisper_model.detect_language(mel)
-            acoustic_guess = max(probs, key=probs.get)
-
-            result = self.whisper_model.transcribe(audio_np)
-            # Use py3langid to verify the written text characters
-            detected_lang, _ = py3langid.classify(result["text"])
+            # Safety check: if detect_language returns None (e.g. no speech or empty audio)
+            detection_result = self.whisper_model.detect_language(audio_np)
             
-            print(f"DEBUG | Autodetect -> Acoustic: {acoustic_guess} | Text: {detected_lang}")
+            if detection_result is None:
+                print("DEBUG | Language detection failed (likely silent audio).")
+                return "", "unknown"
+                
+            lang_code, lang_prob, _ = detection_result
+            acoustic_guess = lang_code
 
-        text = result["text"].strip()
-        
-        # Return the text and the final confirmed language code
-        return text, detected_lang
+            # Run transcription
+            segments, _ = self.whisper_model.transcribe(audio_np)
+            
+            # Collect text from the generator (segments is an iterable)
+            full_text = "".join([segment.text for segment in segments]).strip()
+            
+            if not full_text:
+                return "", acoustic_guess
+            
+            # Simple blacklist for common hallucinations
+            hallucination_blacklist = ["Thank you for watching!", "Thanks for watching!", "You", "you"]
+            if full_text in hallucination_blacklist:
+                return "", "unknown"
+                
+            # Use py3langid to verify the written text characters
+            detected_lang, _ = py3langid.classify(full_text)
+            
+            print(f"DEBUG | Autodetect -> Acoustic: {acoustic_guess} ({lang_prob:.2f}) | Text: {detected_lang}")
+            return full_text, detected_lang
+
+        # Path for forced language
+        full_text = "".join([segment.text for segment in segments]).strip()
+        return full_text, detected_lang
 
 
     def handle_input(self, user_input):
